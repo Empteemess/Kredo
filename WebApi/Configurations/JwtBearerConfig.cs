@@ -1,0 +1,32 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
+namespace WebApi.Configurations;
+
+public static class JwtBearerConfig
+{
+    public static IServiceCollection JwtBearerConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    RoleClaimType = System.Security.Claims.ClaimTypes.Role,
+                    NameClaimType = System.Security.Claims.ClaimTypes.Email,
+                    ClockSkew = TimeSpan.FromSeconds(30)
+                };
+            });
+
+        return services;
+    }
+}
